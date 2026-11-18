@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sujan Store — Interactive Product Catalog</title>
+<style>
+  :root {
+    --maroon: #5B1424;
+    --maroon-dark: #3B0A15;
+    --gold: #D4AF37;
+    --cream: #FFFDF9;
+    --border: #EADFD2;
+    --text: #2B1B1D;
+    --muted: #766365;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    padding-bottom: 92px;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
+    color: #fff;
+    padding: 16px 16px 14px;
+    border-bottom: 3px solid var(--gold);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+  }
+  .header-top {
+    max-width: 1160px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand img {
+    height: 44px;
+    width: auto;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+  .brand small {
+    display: block;
+    font-size: 11.5px;
+    color: #F4DFB0;
+  }
+  .search-wrap {
+    flex: 1;
+    min-width: 210px;
+    max-width: 360px;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 9px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(212,175,55,0.55);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-wrap input::placeholder { color: #EADCE0; }
+
+  .cat-bar {
+    max-width: 1160px;
+    margin: 12px auto 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .cat-bar::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    white-space: nowrap;
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(212,175,55,0.45);
+    background: rgba(255,255,255,0.1);
+    color: #FFFDF9;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.15s;
+  }
+  .cat-pill.active, .cat-pill:hover {
+    background: var(--gold);
+    color: var(--maroon-dark);
+    border-color: var(--gold);
+  }
+
+  /* GRID */
+  main {
+    max-width: 1160px;
+    margin: 18px auto;
+    padding: 0 14px;
+  }
+  .stats-line {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 540px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(43,27,29,0.05);
+  }
+  .img-wrap {
+    position: relative;
+    height: 200px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    cursor: zoom-in;
+    border-bottom: 1px solid #F3ECE3;
+  }
+  @media (max-width: 540px) {
+    .img-wrap { height: 155px; }
+  }
+  .img-wrap img.main-photo {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+  .zoom-hint {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.58);
+    color: #fff;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  .sku-tag {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    background: rgba(91,20,36,0.9);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 5px;
+  }
+  .thumbs {
+    display: flex;
+    gap: 5px;
+    padding: 6px 8px 0;
+  }
+  .thumbs img {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+  }
+  .thumbs img.active {
+    border-color: var(--maroon);
+  }
+  .card-body {
+    padding: 10px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cat-name {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #9A742E;
+    font-weight: 700;
+  }
+  .pdt-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+  .price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .price {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--maroon);
+  }
+  .add-btn {
+    width: 100%;
+    padding: 9px;
+    border: none;
+    border-radius: 8px;
+    background: var(--maroon);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .add-btn:hover { background: var(--maroon-dark); }
+  .qty-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid var(--maroon);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .qty-box button {
+    width: 38px;
+    height: 34px;
+    border: none;
+    background: #F9F2EC;
+    color: var(--maroon);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .qty-box span {
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  /* FLOATING CART BAR */
+  .cart-bar {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 680px;
+    background: var(--maroon-dark);
+    color: #fff;
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 11px 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    z-index: 40;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.3);
+  }
+  .cart-bar.show { display: flex; }
+  .cart-bar .summary { font-size: 13.5px; }
+  .cart-bar .summary strong { font-size: 15px; color: #F4DFB0; }
+  .cart-bar button {
+    background: var(--gold);
+    color: var(--maroon-dark);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 9px;
+    font-weight: 800;
+    font-size: 13.5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* LIGHTBOX */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 8, 10, 0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .lightbox.open { display: flex; }
+  .lb-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: rgba(255,255,255,0.16);
+    color: #fff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .lb-stage {
+    position: relative;
+    max-width: 94vw;
+    max-height: 72vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lb-stage img {
+    max-width: 90vw;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #fff;
+  }
+  .lb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .lb-prev { left: 8px; }
+  .lb-next { right: 8px; }
+  .lb-caption {
+    color: #F4DFB0;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .lb-thumbs {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .lb-thumbs img {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    opacity: 0.65;
+  }
+  .lb-thumbs img.active {
+    border-color: var(--gold);
+    opacity: 1;
+  }
+
+  /* CHECKOUT MODAL */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.62);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 90;
+    padding: 14px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.3);
+  }
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .modal-head h2 { margin: 0; font-size: 18px; color: var(--maroon); }
+  .modal-close {
+    border: none;
+    background: #F4ECE4;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+    gap: 10px;
+    font-size: 13.5px;
+  }
+  .order-item .oi-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .order-item .oi-ctrl button {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    background: #FAF6F0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--maroon);
+    margin: 12px 0 16px;
+  }
+  .form-group {
+    margin-bottom: 11px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid #D9CBBF;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .btn-wa {
+    flex: 1;
+    min-width: 180px;
+    background: #1B8A4B;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 9px;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-copy {
+    flex: 1;
+    min-width: 140px;
+    background: var(--maroon);
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 9px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .status-msg {
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #1B8A4B;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="brand">
+      <img src="logo.png" alt="Sujan Store" onerror="this.style.display='none'" />
+      <div>
+        <h1>SUJAN STORE</h1>
+        <small>Free Delivery Inside Kathmandu Valley • Tap photo to enlarge</small>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input id="searchInput" type="search" placeholder="Search product name or code..." />
+    </div>
+  </div>
+  <div class="cat-bar" id="catBar"></div>
+</header>
+
+<main>
+  <div class="stats-line" id="statsLine"></div>
+  <div class="grid" id="productGrid"></div>
+</main>
+
+<div class="cart-bar" id="cartBar">
+  <div class="summary" id="cartSummary"></div>
+  <button onclick="openCheckout()">Review &amp; Order →</button>
+</div>
+
+<!-- PHOTO LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">×</button>
+  <div class="lb-stage">
+    <button class="lb-nav lb-prev" onclick="stepLightbox(-1)">‹</button>
+    <img id="lbMainImg" src="" alt="" />
+    <button class="lb-nav lb-next" onclick="stepLightbox(1)">›</button>
+  </div>
+  <div class="lb-caption" id="lbCaption"></div>
+  <div class="lb-thumbs" id="lbThumbs"></div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-bg" id="checkoutModal" onclick="if(event.target===this) closeCheckout()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Your Order Summary</h2>
+      <button class="modal-close" onclick="closeCheckout()">×</button>
+    </div>
+    <div id="orderItemsList"></div>
+    <div class="total-line">
+      <span>Estimated Total</span>
+      <span id="orderTotal">NPR 0</span>
+    </div>
+
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input id="custName" type="text" placeholder="Enter your name" required />
+    </div>
+    <div class="form-group">
+      <label>Phone / WhatsApp Number *</label>
+      <input id="custPhone" type="tel" placeholder="98XXXXXXXX" required />
+    </div>
+    <div class="form-group">
+      <label>Delivery Address *</label>
+      <input id="custAddress" type="text" placeholder="Tole, Area, City / Landmark" required />
+    </div>
+    <div class="form-group">
+      <label>Notes (Optional)</label>
+      <textarea id="custNotes" rows="2" placeholder="Preferred color, size, or delivery instructions"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-wa" onclick="submitWhatsApp()">Send Order on WhatsApp</button>
+      <button class="btn-copy" onclick="copyOrderText()">Copy Order Details</button>
+    </div>
+    <div class="status-msg" id="orderStatus"></div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [{"code": "SS25-061", "name": "Mala 1", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 600, "images": ["images/SS25-061_1.jpg", "images/SS25-061_2.jpg", "images/SS25-061_3.jpg", "images/SS25-061_4.jpg"]}, {"code": "SS25-065", "name": "Mala 3", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 900, "images": ["images/SS25-065_1.jpg", "images/SS25-065_2.jpg", "images/SS25-065_3.jpg"]}, {"code": "SS25-067", "name": "Mala 4", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 800, "images": ["images/SS25-067_1.jpg", "images/SS25-067_2.jpg", "images/SS25-067_3.jpg"]}, {"code": "SS25-069", "name": "Mala 5", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 1500, "images": ["images/SS25-069_1.jpg", "images/SS25-069_2.jpg", "images/SS25-069_3.jpg", "images/SS25-069_4.jpg"]}, {"code": "SS25-071", "name": "Mala 6", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 850, "images": ["images/SS25-071_1.jpg", "images/SS25-071_2.jpg", "images/SS25-071_3.jpg", "images/SS25-071_4.jpg"]}, {"code": "SS25-073", "name": "Mala 7", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 500, "images": ["images/SS25-073_1.jpg", "images/SS25-073_2.jpg", "images/SS25-073_3.jpg", "images/SS25-073_4.jpg"]}, {"code": "SS25-075", "name": "Mala 8", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 350, "images": ["images/SS25-075_1.jpg", "images/SS25-075_2.jpg", "images/SS25-075_3.jpg", "images/SS25-075_4.jpg"]}, {"code": "SS25-077", "name": "Mala 9", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 400, "images": ["images/SS25-077_1.jpg", "images/SS25-077_2.jpg", "images/SS25-077_3.jpg"]}, {"code": "SS25-143", "name": "Mala 10", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 1800, "images": ["images/SS25-143_1.jpg", "images/SS25-143_2.jpg", "images/SS25-143_3.jpg", "images/SS25-143_4.jpg"]}, {"code": "SS25-145", "name": "Mala 11", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 2500, "images": ["images/SS25-145_1.jpg", "images/SS25-145_2.jpg", "images/SS25-145_3.jpg", "images/SS25-145_4.jpg"]}, {"code": "SS25-147", "name": "Mala 12", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 2000, "images": ["images/SS25-147_1.jpg", "images/SS25-147_2.jpg", "images/SS25-147_3.jpg"]}, {"code": "SS25-149", "name": "Mala 13", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 700, "images": ["images/SS25-149_1.jpg", "images/SS25-149_2.jpg", "images/SS25-149_3.jpg"]}, {"code": "SS25-151", "name": "Mala 14", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 2000, "images": ["images/SS25-151_1.jpg", "images/SS25-151_2.jpg", "images/SS25-151_3.jpg"]}, {"code": "SS25-153", "name": "Mala 15", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 2000, "images": ["images/SS25-153_1.jpg", "images/SS25-153_2.jpg", "images/SS25-153_3.jpg"]}, {"code": "SS25-155", "name": "Mala 16", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 700, "images": ["images/SS25-155_1.jpg", "images/SS25-155_2.jpg", "images/SS25-155_3.jpg"]}, {"code": "SS25-259", "name": "Annaprasan Jari Malla", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 1000, "images": ["images/SS25-259_1.jpg", "images/SS25-259_2.jpg", "images/SS25-259_3.jpg", "images/SS25-259_4.jpg"]}, {"code": "SS25-261", "name": "Annaprasan Jari Malla", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 1000, "images": ["images/SS25-261_1.jpg", "images/SS25-261_2.jpg", "images/SS25-261_3.jpg", "images/SS25-261_4.jpg"]}, {"code": "SS25-263", "name": "Jari Malla with stone", "group": "Mala", "section": "Ceremonial Mala & Garlands", "price": 1500, "images": ["images/SS25-263_1.jpg", "images/SS25-263_2.jpg", "images/SS25-263_3.jpg", "images/SS25-263_4.jpg"]}, {"code": "SS25-025", "name": "Bag 1", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-025_1.jpg", "images/SS25-025_2.jpg", "images/SS25-025_3.jpg", "images/SS25-025_4.jpg"]}, {"code": "SS25-027", "name": "Bag 2", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-027_1.jpg", "images/SS25-027_2.jpg", "images/SS25-027_3.jpg"]}, {"code": "SS25-029", "name": "Bag 3", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-029_1.jpg", "images/SS25-029_2.jpg", "images/SS25-029_3.jpg"]}, {"code": "SS25-031", "name": "Bag 4", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-031_1.jpg", "images/SS25-031_2.jpg", "images/SS25-031_3.jpg"]}, {"code": "SS25-033", "name": "Bag 5", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-033_1.jpg", "images/SS25-033_2.jpg", "images/SS25-033_3.jpg"]}, {"code": "SS25-035", "name": "Bag 6", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-035_1.jpg", "images/SS25-035_2.jpg", "images/SS25-035_3.jpg"]}, {"code": "SS25-037", "name": "Bag 7", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-037_1.jpg", "images/SS25-037_2.jpg", "images/SS25-037_3.jpg"]}, {"code": "SS25-039", "name": "Bag 8", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-039_1.jpg", "images/SS25-039_2.jpg", "images/SS25-039_3.jpg"]}, {"code": "SS25-041", "name": "Bag 9", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-041_1.jpg", "images/SS25-041_2.jpg", "images/SS25-041_3.jpg"]}, {"code": "SS25-043", "name": "Bag 10", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-043_1.jpg", "images/SS25-043_2.jpg", "images/SS25-043_3.jpg"]}, {"code": "SS25-045", "name": "Bag 11", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-045_1.jpg", "images/SS25-045_2.jpg", "images/SS25-045_3.jpg"]}, {"code": "SS25-047", "name": "Bag 12", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 700, "images": ["images/SS25-047_1.jpg", "images/SS25-047_2.jpg", "images/SS25-047_3.jpg"]}, {"code": "SS25-101", "name": "Bag 13", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 500, "images": ["images/SS25-101_1.jpg", "images/SS25-101_2.jpg"]}, {"code": "SS25-103", "name": "Bag 14", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 500, "images": ["images/SS25-103_1.jpg", "images/SS25-103_2.jpg", "images/SS25-103_3.jpg"]}, {"code": "SS25-173", "name": "Bag 17", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-173_1.jpg", "images/SS25-173_2.jpg", "images/SS25-173_3.jpg", "images/SS25-173_4.jpg"]}, {"code": "SS25-175", "name": "Bag 18", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-175_1.jpg", "images/SS25-175_2.jpg", "images/SS25-175_3.jpg", "images/SS25-175_4.jpg"]}, {"code": "SS25-177", "name": "Bag 19", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-177_1.jpg", "images/SS25-177_2.jpg", "images/SS25-177_3.jpg", "images/SS25-177_4.jpg"]}, {"code": "SS25-179", "name": "Bag 20", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-179_1.jpg", "images/SS25-179_2.jpg", "images/SS25-179_3.jpg", "images/SS25-179_4.jpg"]}, {"code": "SS25-229", "name": "Bag 21", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-229_1.jpg", "images/SS25-229_2.jpg", "images/SS25-229_3.jpg", "images/SS25-229_4.jpg"]}, {"code": "SS25-231", "name": "Bag 22", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-231_1.jpg", "images/SS25-231_2.jpg", "images/SS25-231_3.jpg", "images/SS25-231_4.jpg"]}, {"code": "SS25-233", "name": "Bag 23", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-233_1.jpg", "images/SS25-233_2.jpg", "images/SS25-233_3.jpg", "images/SS25-233_4.jpg"]}, {"code": "SS25-235", "name": "Bag 24", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-235_1.jpg", "images/SS25-235_2.jpg", "images/SS25-235_3.jpg", "images/SS25-235_4.jpg"]}, {"code": "SS25-237", "name": "Bag 25", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 750, "images": ["images/SS25-237_1.jpg", "images/SS25-237_2.jpg", "images/SS25-237_3.jpg", "images/SS25-237_4.jpg"]}, {"code": "SS25-253", "name": "Bag 26", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 2000, "images": ["images/SS25-253_1.jpg", "images/SS25-253_2.jpg", "images/SS25-253_3.jpg", "images/SS25-253_4.jpg"]}, {"code": "SS25-265", "name": "Makhmal Bag 27", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 2000, "images": ["images/SS25-265_1.jpg", "images/SS25-265_2.jpg", "images/SS25-265_3.jpg", "images/SS25-265_4.jpg"]}, {"code": "SS25-267", "name": "Makhmal Bag 28", "group": "Bag", "section": "Bags & Makhmal Clutches", "price": 2000, "images": ["images/SS25-267_1.jpg", "images/SS25-267_2.jpg", "images/SS25-267_3.jpg", "images/SS25-267_4.jpg"]}, {"code": "SS25-013", "name": "Ghumto 1", "group": "Ghumto", "section": "Nariwol & Bridal Sets", "price": 700, "images": ["images/SS25-013_1.jpg", "images/SS25-013_2.jpg", "images/SS25-013_3.jpg", "images/SS25-013_4.jpg"]}, {"code": "SS25-016", "name": "Ghumto 2", "group": "Ghumto", "section": "Nariwol & Bridal Sets", "price": 1000, "images": ["images/SS25-016_1.jpg", "images/SS25-016_2.jpg", "images/SS25-016_3.jpg", "images/SS25-016_4.jpg"]}, {"code": "SS25-139", "name": "Nariwol Set 1", "group": "Nariwol set", "section": "Nariwol & Bridal Sets", "price": 2500, "images": ["images/SS25-139_1.jpg", "images/SS25-139_2.jpg", "images/SS25-139_3.jpg", "images/SS25-139_4.jpg"]}, {"code": "SS25-141", "name": "Nariwol Set 2", "group": "Nariwol set", "section": "Nariwol & Bridal Sets", "price": 2500, "images": ["images/SS25-141_1.jpg", "images/SS25-141_2.jpg", "images/SS25-141_3.jpg", "images/SS25-141_4.jpg"]}, {"code": "SS25-159", "name": "Nariwol Set 4", "group": "Nariwol set", "section": "Nariwol & Bridal Sets", "price": 1500, "images": ["images/SS25-159_1.jpg", "images/SS25-159_2.jpg", "images/SS25-159_3.jpg", "images/SS25-159_4.jpg"]}, {"code": "SS25-255", "name": "Nariwol Set 5", "group": "Nariwol set", "section": "Nariwol & Bridal Sets", "price": 1600, "images": ["images/SS25-255_1.jpg", "images/SS25-255_2.jpg", "images/SS25-255_3.jpg"]}, {"code": "SS25-257", "name": "Nariwol Set 6", "group": "Nariwol set", "section": "Nariwol & Bridal Sets", "price": 2000, "images": ["images/SS25-257_1.jpg", "images/SS25-257_2.jpg", "images/SS25-257_3.jpg"]}, {"code": "SS25-009", "name": "Simple Dhago 5", "group": "Dhago", "section": "Traditional Dhago", "price": 225, "images": ["images/SS25-009_1.jpg", "images/SS25-009_2.jpg", "images/SS25-009_3.jpg"]}, {"code": "SS25-239", "name": "Simple Dhago 11", "group": "Dhago", "section": "Traditional Dhago", "price": 350, "images": ["images/SS25-239_1.jpg", "images/SS25-239_2.jpg", "images/SS25-239_3.jpg", "images/SS25-239_4.jpg"]}, {"code": "SS25-241", "name": "Simple Dhago 12", "group": "Dhago", "section": "Traditional Dhago", "price": 330, "images": ["images/SS25-241_1.jpg", "images/SS25-241_2.jpg", "images/SS25-241_3.jpg", "images/SS25-241_4.jpg"]}, {"code": "SS25-243", "name": "Simple Dhago 13", "group": "Dhago", "section": "Traditional Dhago", "price": 450, "images": ["images/SS25-243_1.jpg", "images/SS25-243_2.jpg", "images/SS25-243_3.jpg", "images/SS25-243_4.jpg"]}, {"code": "SS25-245", "name": "Simple Dhago 14", "group": "Dhago", "section": "Traditional Dhago", "price": 225, "images": ["images/SS25-245_1.jpg", "images/SS25-245_2.jpg", "images/SS25-245_3.jpg", "images/SS25-245_4.jpg"]}, {"code": "SS25-247", "name": "Simple Dhago 15", "group": "Dhago", "section": "Traditional Dhago", "price": 225, "images": ["images/SS25-247_1.jpg", "images/SS25-247_2.jpg", "images/SS25-247_3.jpg", "images/SS25-247_4.jpg"]}, {"code": "SS25-251", "name": "Natthi 1", "group": "Natthi", "section": "Bangles & Traditional Jewelry", "price": 300, "images": ["images/SS25-251_1.jpg", "images/SS25-251_2.jpg", "images/SS25-251_3.jpg", "images/SS25-251_4.jpg"]}, {"code": "SS25-049", "name": "Sindur Chopne 1", "group": "Sindur Chopne", "section": "Ceremonial Essentials", "price": 150, "images": ["images/SS25-049_1.jpg", "images/SS25-049_2.jpg", "images/SS25-049_3.jpg"]}, {"code": "SS25-051", "name": "Sindur Chopne 2", "group": "Sindur Chopne", "section": "Ceremonial Essentials", "price": 150, "images": ["images/SS25-051_1.jpg", "images/SS25-051_2.jpg", "images/SS25-051_3.jpg", "images/SS25-051_4.jpg"]}, {"code": "SS25-053", "name": "Sindur Chopne 3", "group": "Sindur Chopne", "section": "Ceremonial Essentials", "price": 150, "images": ["images/SS25-053_1.jpg", "images/SS25-053_2.jpg", "images/SS25-053_3.jpg", "images/SS25-053_4.jpg"]}, {"code": "SS25-181", "name": "Ala 1", "group": "Ala", "section": "Ceremonial Essentials", "price": 200, "images": ["images/SS25-181_1.jpg", "images/SS25-181_2.jpg", "images/SS25-181_3.jpg", "images/SS25-181_4.jpg"]}, {"code": "SS25-183", "name": "Saptarangi Tika 1", "group": "Saptarangi Tika", "section": "Ceremonial Essentials", "price": 280, "images": ["images/SS25-183_1.jpg", "images/SS25-183_2.jpg", "images/SS25-183_3.jpg", "images/SS25-183_4.jpg"]}];
+const SECTIONS = ["Ceremonial Mala & Garlands", "Bags & Makhmal Clutches", "Nariwol & Bridal Sets", "Traditional Dhago", "Bangles & Traditional Jewelry", "Ceremonial Essentials"];
+const WHATSAPP_NUMBER = "9779851237839";
+const APPS_SCRIPT_URL = "";
+
+let activeSection = "All";
+let searchTerm = "";
+const cart = {}; // code -> qty
+const activeCardImg = {}; // code -> index
+
+let lbProduct = null;
+let lbIndex = 0;
+
+function renderCategories() {
+  const bar = document.getElementById("catBar");
+  const all = ["All", ...SECTIONS];
+  bar.innerHTML = all.map(sec => `
+    <button class="cat-pill ${sec === activeSection ? 'active' : ''}" onclick="setSection('${sec.replace(/'/g, "\\'")}')">
+      ${sec}
+    </button>
+  `).join("");
+}
+
+function setSection(sec) {
+  activeSection = sec;
+  renderCategories();
+  renderGrid();
+}
+
+function getFiltered() {
+  const q = searchTerm.trim().toLowerCase();
+  return PRODUCTS.filter(p => {
+    const matchSec = activeSection === "All" || p.section === activeSection;
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || p.group.toLowerCase().includes(q);
+    return matchSec && matchQ;
+  });
+}
+
+function swapCardThumb(code, idx) {
+  activeCardImg[code] = idx;
+  const prod = PRODUCTS.find(p => p.code === code);
+  if (!prod) return;
+  const imgEl = document.getElementById(`main-${code}`);
+  if (imgEl) imgEl.src = prod.images[idx];
+  const thumbWrap = document.getElementById(`thumbs-${code}`);
+  if (thumbWrap) {
+    [...thumbWrap.children].forEach((el, i) => el.classList.toggle("active", i === idx));
+  }
+}
+
+function renderGrid() {
+  const list = getFiltered();
+  document.getElementById("statsLine").textContent = `Showing ${list.length} of ${PRODUCTS.length} available products`;
+  const grid = document.getElementById("productGrid");
+
+  grid.innerHTML = list.map(p => {
+    const curIdx = activeCardImg[p.code] || 0;
+    const qty = cart[p.code] || 0;
+    const priceText = p.price > 0 ? `NPR ${p.price.toLocaleString()}` : "Price on Inquiry";
+    const thumbsHtml = p.images.length > 1 ? `
+      <div class="thumbs" id="thumbs-${p.code}">
+        ${p.images.map((src, i) => `
+          <img src="${src}" class="${i === curIdx ? 'active' : ''}" onclick="swapCardThumb('${p.code}', ${i})" alt="" loading="lazy" />
+        `).join("")}
+      </div>` : "";
+
+    const actionHtml = qty > 0 ? `
+      <div class="qty-box">
+        <button onclick="updateQty('${p.code}', -1)">−</button>
+        <span>${qty} pcs</span>
+        <button onclick="updateQty('${p.code}', 1)">+</button>
+      </div>` : `
+      <button class="add-btn" onclick="updateQty('${p.code}', 1)">+ Add to Order</button>`;
+
+    return `
+      <div class="card">
+        <div class="img-wrap" onclick="openLightbox('${p.code}')">
+          <img id="main-${p.code}" class="main-photo" src="${p.images[curIdx]}" alt="${p.name}" loading="lazy" />
+          <span class="sku-tag">${p.code}</span>
+          <span class="zoom-hint">🔍 Tap to zoom</span>
+        </div>
+        ${thumbsHtml}
+        <div class="card-body">
+          <div>
+            <div class="cat-name">${p.group}</div>
+            <div class="pdt-title">${p.name}</div>
+            <div class="price-row"><span class="price">${priceText}</span></div>
+          </div>
+          ${actionHtml}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function updateQty(code, delta) {
+  const next = (cart[code] || 0) + delta;
+  if (next <= 0) delete cart[code];
+  else cart[code] = next;
+  renderGrid();
+  renderCartBar();
+  if (document.getElementById("checkoutModal").classList.contains("open")) {
+    renderCheckoutItems();
+  }
+}
+
+function renderCartBar() {
+  const entries = Object.entries(cart);
+  const bar = document.getElementById("cartBar");
+  if (!entries.length) {
+    bar.classList.remove("show");
+    return;
+  }
+  let totalPcs = 0;
+  let totalNpr = 0;
+  entries.forEach(([code, qty]) => {
+    const p = PRODUCTS.find(x => x.code === code);
+    totalPcs += qty;
+    if (p && p.price > 0) totalNpr += p.price * qty;
+  });
+  document.getElementById("cartSummary").innerHTML =
+    `<strong>${entries.length} product${entries.length > 1 ? 's' : ''} (${totalPcs} pcs)</strong> • Est. NPR ${totalNpr.toLocaleString()}`;
+  bar.classList.add("show");
+}
+
+/* LIGHTBOX */
+function openLightbox(code) {
+  lbProduct = PRODUCTS.find(p => p.code === code);
+  if (!lbProduct) return;
+  lbIndex = activeCardImg[code] || 0;
+  updateLightbox();
+  document.getElementById("lightbox").classList.add("open");
+}
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("open");
+}
+function stepLightbox(dir) {
+  if (!lbProduct) return;
+  lbIndex = (lbIndex + dir + lbProduct.images.length) % lbProduct.images.length;
+  updateLightbox();
+}
+function updateLightbox() {
+  document.getElementById("lbMainImg").src = lbProduct.images[lbIndex];
+  const priceText = lbProduct.price > 0 ? `NPR ${lbProduct.price.toLocaleString()}` : "Price on Inquiry";
+  document.getElementById("lbCaption").textContent = `${lbProduct.name} (${lbProduct.code}) — ${priceText} [${lbIndex + 1}/${lbProduct.images.length}]`;
+  document.getElementById("lbThumbs").innerHTML = lbProduct.images.map((src, i) => `
+    <img src="${src}" class="${i === lbIndex ? 'active' : ''}" onclick="lbIndex=${i}; updateLightbox();" />
+  `).join("");
+}
+
+/* CHECKOUT */
+function openCheckout() {
+  renderCheckoutItems();
+  document.getElementById("orderStatus").textContent = "";
+  document.getElementById("checkoutModal").classList.add("open");
+}
+function closeCheckout() {
+  document.getElementById("checkoutModal").classList.remove("open");
+}
+function renderCheckoutItems() {
+  const entries = Object.entries(cart);
+  const container = document.getElementById("orderItemsList");
+  if (!entries.length) {
+    container.innerHTML = "<p>Your order is empty.</p>";
+    document.getElementById("orderTotal").textContent = "NPR 0";
+    return;
+  }
+  let total = 0;
+  container.innerHTML = entries.map(([code, qty]) => {
+    const p = PRODUCTS.find(x => x.code === code);
+    const sub = p.price > 0 ? p.price * qty : 0;
+    total += sub;
+    const subTxt = p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Inquiry";
+    return `
+      <div class="order-item">
+        <div><strong>${p.name}</strong> <small>(${p.code})</small><br/><small>${subTxt}</small></div>
+        <div class="oi-ctrl">
+          <button onclick="updateQty('${code}', -1)">−</button>
+          <span>${qty}</span>
+          <button onclick="updateQty('${code}', 1)">+</button>
+        </div>
+      </div>`;
+  }).join("");
+  document.getElementById("orderTotal").textContent = `NPR ${total.toLocaleString()}`;
+}
+
+function buildOrderMessage() {
+  const name = document.getElementById("custName").value.trim();
+  const phone = document.getElementById("custPhone").value.trim();
+  const addr = document.getElementById("custAddress").value.trim();
+  const notes = document.getElementById("custNotes").value.trim();
+
+  if (!name || !phone || !addr) {
+    alert("Please fill in your Name, Phone Number, and Delivery Address.");
+    return null;
+  }
+  const entries = Object.entries(cart);
+  if (!entries.length) {
+    alert("Please add at least one product to your order.");
+    return null;
+  }
+
+  let total = 0;
+  const lines = ["*New Order — Sujan Store*", ""];
+  entries.forEach(([code, qty], idx) => {
+    const p = PRODUCTS.find(x => x.code === code);
+    const sub = p.price > 0 ? p.price * qty : 0;
+    total += sub;
+    const pricePart = p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Price on Inquiry";
+    lines.push(`${idx + 1}. ${p.name} [${code}] × ${qty} pcs — ${pricePart}`);
+  });
+  lines.push("", `*Estimated Total:* NPR ${total.toLocaleString()}`);
+  lines.push("", "*Customer Details:*");
+  lines.push(`Name: ${name}`);
+  lines.push(`Phone: ${phone}`);
+  lines.push(`Address: ${addr}`);
+  if (notes) lines.push(`Notes: ${notes}`);
+  return lines.join("\n");
+}
+
+function logToSheetIfConfigured(msg) {
+  if (!APPS_SCRIPT_URL) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: document.getElementById("custName").value.trim(),
+      phone: document.getElementById("custPhone").value.trim(),
+      address: document.getElementById("custAddress").value.trim(),
+      notes: document.getElementById("custNotes").value.trim(),
+      items: cart,
+      summary: msg,
+    })
+  }).catch(() => {});
+}
+
+function submitWhatsApp() {
+  const msg = buildOrderMessage();
+  if (!msg) return;
+  logToSheetIfConfigured(msg);
+  if (!WHATSAPP_NUMBER) {
+    navigator.clipboard?.writeText(msg);
+    document.getElementById("orderStatus").textContent =
+      "Order copied! (Store WhatsApp number not yet set in index.html — paste it into WhatsApp/Viber.)";
+    return;
+  }
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
+  document.getElementById("orderStatus").textContent = "Opening WhatsApp with your order details...";
+}
+
+function copyOrderText() {
+  const msg = buildOrderMessage();
+  if (!msg) return;
+  logToSheetIfConfigured(msg);
+  navigator.clipboard.writeText(msg).then(() => {
+    document.getElementById("orderStatus").textContent = "Order copied to clipboard! Paste in WhatsApp, Viber, or Messenger.";
+  });
+}
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  searchTerm = e.target.value;
+  renderGrid();
+});
+
+renderCategories();
+renderGrid();
+</script>
+</body>
+</html>
