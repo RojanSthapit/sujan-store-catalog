@@ -702,6 +702,81 @@
     color: #1B8A4B;
     font-weight: 600;
   }
+
+  /* ABOUT & CONTACT FOOTER */
+  .info-section {
+    max-width: 1200px;
+    margin: 34px auto 0;
+    padding: 0 16px;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 6px 24px rgba(24, 20, 21, 0.04);
+  }
+  @media (max-width: 720px) {
+    .info-grid { grid-template-columns: 1fr; padding: 18px; }
+  }
+  .info-block h3 {
+    margin: 0 0 8px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 20px;
+    color: var(--accent);
+  }
+  .info-block p {
+    margin: 0 0 12px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+  .info-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .info-tag {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 13.5px;
+  }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface-soft);
+    border-radius: 11px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .contact-item:hover {
+    background: #EDE6DC;
+  }
+  .contact-item span.lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--muted);
+    display: block;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -753,6 +828,39 @@
   <div class="stats-line" id="statsLine"></div>
   <div class="grid" id="productGrid"></div>
 </main>
+
+<section class="info-section" id="about-contact">
+  <div class="info-grid">
+    <div class="info-block">
+      <h3>About Sujan Store</h3>
+      <p>
+        Sujan Store is a Kathmandu-based boutique dedicated to authentic Nepali ceremonial wear and
+        festive essentials. From handcrafted Annaprasan Jari Malas, bridal Ghumto &amp; Nariwol sets,
+        and embroidered Makhmal bags to traditional Dhago, bangles, and cosmetics — every piece is
+        curated for weddings, Bratabandha, Pasni, and special cultural celebrations.
+      </p>
+      <div class="info-tags">
+        <span class="info-tag">Free Delivery in Kathmandu Valley</span>
+        <span class="info-tag">Nationwide Shipping</span>
+        <span class="info-tag">Cash &amp; Digital Payment</span>
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Contact Us</h3>
+      <div class="contact-list">
+        <a class="contact-item" href="https://wa.me/9779851237839" target="_blank">
+          <div><span class="lbl">WhatsApp / Call</span>+977 9851237839</div>
+        </a>
+        <a class="contact-item" href="mailto:Sujan.store.np@gmail.com">
+          <div><span class="lbl">Email</span>Sujan.store.np@gmail.com</div>
+        </a>
+        <div class="contact-item">
+          <div><span class="lbl">Service Area</span>Kathmandu Valley (Free Delivery) &amp; All Nepal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <div class="cart-bar" id="cartBar">
   <div class="summary" id="cartSummary"></div>
