@@ -1115,20 +1115,46 @@ function sendOrderEmail(msg) {
   .catch(() => {});
 }
 
+function showToast(text) {
+  let toast = document.getElementById("orderToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "orderToast";
+    toast.style.cssText = "position:fixed;top:76px;left:50%;transform:translateX(-50%);background:#1B8A4B;color:#fff;padding:11px 20px;border-radius:999px;font-size:13.5px;font-weight:700;z-index:120;box-shadow:0 8px 24px rgba(0,0,0,0.22);text-align:center;max-width:90vw;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = text;
+  toast.style.display = "block";
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { toast.style.display = "none"; }, 5000);
+}
+
+function resetToHomeAfterOrder(toastText) {
+  Object.keys(cart).forEach(k => delete cart[k]);
+  activeSection = "All";
+  searchTerm = "";
+  const searchEl = document.getElementById("searchInput");
+  if (searchEl) searchEl.value = "";
+  closeCheckout();
+  renderCategories();
+  renderGrid();
+  renderCartBar();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  showToast(toastText);
+}
+
 function submitWhatsApp() {
   const msg = buildOrderMessage();
   if (!msg) return;
   logToSheetIfConfigured(msg);
   sendOrderEmail(msg);
-  if (!WHATSAPP_NUMBER) {
+  if (WHATSAPP_NUMBER) {
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  } else {
     navigator.clipboard?.writeText(msg);
-    document.getElementById("orderStatus").textContent =
-      "Order emailed & copied! (Store WhatsApp number not yet set in index.html.)";
-    return;
   }
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-  document.getElementById("orderStatus").textContent = "Order email sent! Opening WhatsApp with your order details...";
+  resetToHomeAfterOrder("Thank you! Order placed & opening WhatsApp.");
 }
 
 function copyOrderText() {
@@ -1136,9 +1162,8 @@ function copyOrderText() {
   if (!msg) return;
   logToSheetIfConfigured(msg);
   sendOrderEmail(msg);
-  navigator.clipboard.writeText(msg).then(() => {
-    document.getElementById("orderStatus").textContent = "Order email sent & copied to clipboard! Paste in WhatsApp, Viber, or Messenger.";
-  });
+  navigator.clipboard?.writeText(msg);
+  resetToHomeAfterOrder("Thank you! Order placed & copied to clipboard.");
 }
 
 document.getElementById("searchInput").addEventListener("input", e => {
