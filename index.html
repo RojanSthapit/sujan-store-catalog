@@ -1098,12 +1098,21 @@ function sendOrderEmail(msg) {
 
   return fetch(`https://formsubmit.co/ajax/${encodeURIComponent(ORDER_EMAIL)}`, {
     method: "POST",
+    keepalive: true,
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
     },
     body: JSON.stringify(payload),
-  }).catch(() => {});
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data && data.success === "false" && data.message) {
+      document.getElementById("orderStatus").textContent = data.message;
+    }
+    return data;
+  })
+  .catch(() => {});
 }
 
 function submitWhatsApp() {
