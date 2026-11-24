@@ -1812,9 +1812,15 @@
       <label>Full Name *</label>
       <input id="custName" type="text" placeholder="Enter your name" required />
     </div>
-    <div class="form-group">
-      <label id="custPhoneLbl">Phone / WhatsApp Number *</label>
-      <input id="custPhone" type="tel" placeholder="98XXXXXXXX" required />
+    <div class="form-row-2">
+      <div class="form-group">
+        <label id="custPhoneLbl">Mobile / WhatsApp No. *</label>
+        <input id="custPhone" type="tel" placeholder="98XXXXXXXX" required />
+      </div>
+      <div class="form-group">
+        <label id="custEmailLbl">Email Address</label>
+        <input id="custEmail" type="email" placeholder="you@example.com" />
+      </div>
     </div>
     <div class="form-row-2">
       <div class="form-group">
@@ -2125,8 +2131,10 @@ function applyLang() {
   if (isIntlMode) {
     document.getElementById("checkoutTitle").textContent = "Request a Quote";
     document.getElementById("orderTotalLbl").textContent = "Pricing";
-    document.getElementById("custPhoneLbl").textContent = "WhatsApp / Email *";
-    document.getElementById("custPhone").placeholder = "+1 / +44 / +61... or email";
+    document.getElementById("custPhoneLbl").textContent = "Mobile / WhatsApp No. *";
+    document.getElementById("custPhone").placeholder = "+1 / +44 / +61...";
+    const eLbl = document.getElementById("custEmailLbl");
+    if (eLbl) eLbl.textContent = "Email Address *";
     document.getElementById("custAddrLbl").textContent = "City / Street / Postal Code *";
     document.getElementById("custAddress").placeholder = "Street, City, ZIP / Postal Code";
     document.getElementById("btnWaSubmit").textContent = "Request Quote on WhatsApp";
@@ -2663,13 +2671,16 @@ function getSelectedState() {
 function buildOrderMessage() {
   const name = document.getElementById("custName").value.trim();
   const phone = document.getElementById("custPhone").value.trim();
+  const email = (document.getElementById("custEmail")?.value || "").trim();
   const country = (document.getElementById("custCountry")?.value || "").trim();
   const state = getSelectedState();
   const addr = document.getElementById("custAddress").value.trim();
   const notes = document.getElementById("custNotes").value.trim();
 
-  if (!name || !phone || !country || !state || !addr) {
-    alert("Please fill in your Name, Contact, Country, State/Province, and Street/City Address.");
+  if (!name || !phone || !country || !state || !addr || (isIntlMode && !email)) {
+    alert(isIntlMode
+      ? "Please fill in your Name, Mobile/WhatsApp No., Email, Country, State/Province, and Address."
+      : "Please fill in your Name, Mobile/WhatsApp No., Country, State/Province, and Street/City Address.");
     return null;
   }
   const entries = Object.entries(cart);
@@ -2690,7 +2701,8 @@ function buildOrderMessage() {
   lines.push("", isIntlMode ? "*Pricing:* Custom Quote Requested" : `*Estimated Total:* NPR ${total.toLocaleString()}`);
   lines.push("", "*Customer Details:*");
   lines.push(`Name: ${name}`);
-  lines.push(`Contact: ${phone}`);
+  lines.push(`Mobile / WhatsApp: ${phone}`);
+  if (email) lines.push(`Email: ${email}`);
   lines.push(`Country: ${country}`);
   lines.push(`State / Province: ${state}`);
   lines.push(`Address: ${addr}`);
@@ -2719,6 +2731,7 @@ function sendOrderEmail(msg) {
   if (!ORDER_EMAIL) return Promise.resolve();
   const name = document.getElementById("custName").value.trim();
   const phone = document.getElementById("custPhone").value.trim();
+  const email = (document.getElementById("custEmail")?.value || "").trim();
   const country = (document.getElementById("custCountry")?.value || "").trim();
   const state = getSelectedState();
   const addr = document.getElementById("custAddress").value.trim();
@@ -2731,12 +2744,14 @@ function sendOrderEmail(msg) {
     _template: "table",
     _captcha: "false",
     Customer_Name: name,
-    Customer_Contact: phone,
+    Mobile_Number: phone,
+    Email_Address: email || "-",
     Country: country,
     State_Province: state,
     Street_City_Address: addr,
     Notes: notes || "-",
   };
+  if (email) payload._replyto = email;
 
   Object.entries(cart).forEach(([code, qty], idx) => {
     const p = PRODUCTS.find(x => x.code === code);
