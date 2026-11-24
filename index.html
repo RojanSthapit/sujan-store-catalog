@@ -712,17 +712,26 @@
     margin-bottom: 5px;
     color: var(--text);
   }
-  .form-group input, .form-group textarea {
+  .form-group input, .form-group textarea, .form-group select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #DCD4CA;
     border-radius: 10px;
     font-size: 14px;
     font-family: inherit;
+    background: #fff;
     outline: none;
   }
-  .form-group input:focus, .form-group textarea:focus {
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
     border-color: var(--accent);
+  }
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 520px) {
+    .form-row-2 { grid-template-columns: 1fr; }
   }
   .btn-row {
     display: flex;
@@ -1807,9 +1816,20 @@
       <label id="custPhoneLbl">Phone / WhatsApp Number *</label>
       <input id="custPhone" type="tel" placeholder="98XXXXXXXX" required />
     </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Country *</label>
+        <select id="custCountry" onchange="onCountryChange()" required></select>
+      </div>
+      <div class="form-group">
+        <label>State / Province *</label>
+        <select id="custStateSelect" style="display:none;"></select>
+        <input id="custStateInput" type="text" placeholder="Enter State / Province" style="display:none;" />
+      </div>
+    </div>
     <div class="form-group">
-      <label id="custAddrLbl">Delivery Address *</label>
-      <input id="custAddress" type="text" placeholder="Tole, Area, City / Landmark" required />
+      <label id="custAddrLbl">City / Street Address *</label>
+      <input id="custAddress" type="text" placeholder="City, Tole / Street, Postal Code" required />
     </div>
     <div class="form-group">
       <label>Notes (Optional)</label>
@@ -2107,8 +2127,8 @@ function applyLang() {
     document.getElementById("orderTotalLbl").textContent = "Pricing";
     document.getElementById("custPhoneLbl").textContent = "WhatsApp / Email *";
     document.getElementById("custPhone").placeholder = "+1 / +44 / +61... or email";
-    document.getElementById("custAddrLbl").textContent = "Country & Shipping Address *";
-    document.getElementById("custAddress").placeholder = "City, State/Province, Country";
+    document.getElementById("custAddrLbl").textContent = "City / Street / Postal Code *";
+    document.getElementById("custAddress").placeholder = "Street, City, ZIP / Postal Code";
     document.getElementById("btnWaSubmit").textContent = "Request Quote on WhatsApp";
     document.getElementById("btnCopySubmit").textContent = "Request Quote & Copy";
   }
@@ -2544,14 +2564,91 @@ function renderCheckoutItems() {
   document.getElementById("orderTotal").textContent = isIntlMode ? "Quote Upon Request" : `NPR ${total.toLocaleString()}`;
 }
 
+const COUNTRY_STATES = {
+  "Nepal": [
+    "Bagmati Province (Kathmandu Valley)",
+    "Koshi Province",
+    "Madhesh Province",
+    "Gandaki Province",
+    "Lumbini Province",
+    "Karnali Province",
+    "Sudurpashchim Province",
+  ],
+  "United States": [
+    "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia",
+    "Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland",
+    "Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey",
+    "New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina",
+    "South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming","District of Columbia"
+  ],
+  "Australia": [
+    "New South Wales (NSW)", "Victoria (VIC)", "Queensland (QLD)", "Western Australia (WA)",
+    "South Australia (SA)", "Tasmania (TAS)", "Australian Capital Territory (ACT)", "Northern Territory (NT)"
+  ],
+  "Canada": [
+    "Ontario", "British Columbia", "Alberta", "Quebec", "Manitoba", "Saskatchewan",
+    "Nova Scotia", "New Brunswick", "Newfoundland and Labrador", "Prince Edward Island"
+  ],
+  "United Kingdom": ["England", "Scotland", "Wales", "Northern Ireland"],
+  "India": [
+    "Delhi", "Maharashtra", "Karnataka", "West Bengal", "Uttar Pradesh", "Bihar", "Sikkim",
+    "Uttarakhand", "Assam", "Tamil Nadu", "Gujarat", "Rajasthan", "Punjab", "Telangana", "Other State"
+  ],
+  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"],
+  "Japan": ["Tokyo", "Osaka", "Kanagawa", "Aichi", "Fukuoka", "Hokkaido", "Saitama", "Chiba", "Other Prefecture"],
+};
+
+const COUNTRY_LIST = [
+  "Nepal", "United States", "Australia", "United Kingdom", "Canada", "Japan",
+  "United Arab Emirates", "India", "South Korea", "Qatar", "Saudi Arabia",
+  "Malaysia", "Singapore", "Hong Kong", "New Zealand", "Germany", "France",
+  "Portugal", "Denmark", "Finland", "Norway", "Other"
+];
+
+function initCountryDropdown() {
+  const sel = document.getElementById("custCountry");
+  if (!sel) return;
+  const opts = isIntlMode
+    ? [`<option value="">-- Select Country --</option>`, ...COUNTRY_LIST.filter(c => c !== "Nepal").map(c => `<option value="${c}">${c}</option>`), `<option value="Nepal">Nepal</option>`]
+    : COUNTRY_LIST.map(c => `<option value="${c}" ${c === "Nepal" ? "selected" : ""}>${c}</option>`);
+  sel.innerHTML = opts.join("");
+  onCountryChange();
+}
+
+function onCountryChange() {
+  const country = document.getElementById("custCountry")?.value || "";
+  const stSel = document.getElementById("custStateSelect");
+  const stInp = document.getElementById("custStateInput");
+  if (!stSel || !stInp) return;
+  const list = COUNTRY_STATES[country];
+  if (list && list.length) {
+    stSel.innerHTML = `<option value="">-- Select State / Province --</option>` + list.map(s => `<option value="${s}">${s}</option>`).join("");
+    if (country === "Nepal") stSel.value = list[0];
+    stSel.style.display = "block";
+    stInp.style.display = "none";
+  } else {
+    stSel.style.display = "none";
+    stInp.style.display = "block";
+  }
+}
+
+function getSelectedState() {
+  const stSel = document.getElementById("custStateSelect");
+  const stInp = document.getElementById("custStateInput");
+  if (stSel && stSel.style.display !== "none") return stSel.value.trim();
+  return (stInp ? stInp.value : "").trim();
+}
+
 function buildOrderMessage() {
   const name = document.getElementById("custName").value.trim();
   const phone = document.getElementById("custPhone").value.trim();
+  const country = (document.getElementById("custCountry")?.value || "").trim();
+  const state = getSelectedState();
   const addr = document.getElementById("custAddress").value.trim();
   const notes = document.getElementById("custNotes").value.trim();
 
-  if (!name || !phone || !addr) {
-    alert("Please fill in your Name, Phone Number, and Delivery Address.");
+  if (!name || !phone || !country || !state || !addr) {
+    alert("Please fill in your Name, Contact, Country, State/Province, and Street/City Address.");
     return null;
   }
   const entries = Object.entries(cart);
@@ -2572,7 +2669,9 @@ function buildOrderMessage() {
   lines.push("", isIntlMode ? "*Pricing:* Custom Quote Requested" : `*Estimated Total:* NPR ${total.toLocaleString()}`);
   lines.push("", "*Customer Details:*");
   lines.push(`Name: ${name}`);
-  lines.push(`Phone: ${phone}`);
+  lines.push(`Contact: ${phone}`);
+  lines.push(`Country: ${country}`);
+  lines.push(`State / Province: ${state}`);
   lines.push(`Address: ${addr}`);
   if (notes) lines.push(`Notes: ${notes}`);
   return lines.join("\n");
@@ -2599,6 +2698,8 @@ function sendOrderEmail(msg) {
   if (!ORDER_EMAIL) return Promise.resolve();
   const name = document.getElementById("custName").value.trim();
   const phone = document.getElementById("custPhone").value.trim();
+  const country = (document.getElementById("custCountry")?.value || "").trim();
+  const state = getSelectedState();
   const addr = document.getElementById("custAddress").value.trim();
   const notes = document.getElementById("custNotes").value.trim();
 
@@ -2609,8 +2710,10 @@ function sendOrderEmail(msg) {
     _template: "table",
     _captcha: "false",
     Customer_Name: name,
-    Customer_Phone: phone,
-    Delivery_Address: addr,
+    Customer_Contact: phone,
+    Country: country,
+    State_Province: state,
+    Street_City_Address: addr,
     Notes: notes || "-",
   };
 
@@ -2799,6 +2902,7 @@ function resumeHighlight() {
 }
 
 applyLang();
+initCountryDropdown();
 renderHighlightBanner();
 renderOccasions();
 renderCategories();
