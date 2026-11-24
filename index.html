@@ -1742,7 +1742,7 @@
 
 <div class="cart-bar" id="cartBar">
   <div class="summary" id="cartSummary"></div>
-  <button onclick="openCheckout()">Review Order →</button>
+  <button id="cartBarBtn" onclick="openCheckout()">Review Order →</button>
 </div>
 
 <a class="wa-float" id="waFloat" href="https://wa.me/9779851237839" target="_blank" rel="noopener">💬 Chat on WhatsApp</a>
@@ -1790,12 +1790,12 @@
 <div class="modal-bg" id="checkoutModal">
   <div class="modal">
     <div class="modal-head">
-      <h2>Your Order Summary</h2>
+      <h2 id="checkoutTitle">Your Order Summary</h2>
       <button class="modal-close" onclick="closeCheckout()">×</button>
     </div>
     <div id="orderItemsList"></div>
     <div class="total-line">
-      <span>Estimated Total</span>
+      <span id="orderTotalLbl">Estimated Total</span>
       <span id="orderTotal">NPR 0</span>
     </div>
 
@@ -1804,11 +1804,11 @@
       <input id="custName" type="text" placeholder="Enter your name" required />
     </div>
     <div class="form-group">
-      <label>Phone / WhatsApp Number *</label>
+      <label id="custPhoneLbl">Phone / WhatsApp Number *</label>
       <input id="custPhone" type="tel" placeholder="98XXXXXXXX" required />
     </div>
     <div class="form-group">
-      <label>Delivery Address *</label>
+      <label id="custAddrLbl">Delivery Address *</label>
       <input id="custAddress" type="text" placeholder="Tole, Area, City / Landmark" required />
     </div>
     <div class="form-group">
@@ -1817,8 +1817,8 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn-wa" onclick="submitWhatsApp()">Place Order &amp; Send on WhatsApp</button>
-      <button class="btn-copy" onclick="copyOrderText()">Place Order &amp; Copy Details</button>
+      <button class="btn-wa" id="btnWaSubmit" onclick="submitWhatsApp()">Place Order &amp; Send on WhatsApp</button>
+      <button class="btn-copy" id="btnCopySubmit" onclick="copyOrderText()">Place Order &amp; Copy Details</button>
     </div>
     <div class="status-msg" id="orderStatus"></div>
   </div>
@@ -1991,6 +1991,33 @@ const cart = JSON.parse(localStorage.getItem("sujan_cart") || "{}");
 const wishlist = new Set(JSON.parse(localStorage.getItem("sujan_wishlist") || "[]"));
 const activeCardImg = {};
 
+const _urlMode = (new URLSearchParams(window.location.search).get("mode") || "").toLowerCase();
+let isIntlMode = false;
+if (_urlMode === "intl" || _urlMode === "international") {
+  isIntlMode = true;
+} else if (_urlMode === "np" || _urlMode === "nepal") {
+  isIntlMode = false;
+} else {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    isIntlMode = tz !== "" && tz !== "Asia/Kathmandu" && tz !== "Asia/Katmandu";
+  } catch (e) {
+    isIntlMode = false;
+  }
+}
+
+function formatPrice(price) {
+  const t = I18N[currentLang] || I18N.en;
+  if (isIntlMode) return currentLang === "ne" ? "कोटेशन माग्नुहोस्" : "Request Quote";
+  return price > 0 ? `NPR ${price.toLocaleString()}` : t.inquiry;
+}
+
+function getAddBtnLabel() {
+  const t = I18N[currentLang] || I18N.en;
+  if (isIntlMode) return currentLang === "ne" ? "+ कोटेशनमा थप्नुहोस्" : "+ Add to Quote";
+  return t.addBtn;
+}
+
 function saveState() {
   try {
     localStorage.setItem("sujan_cart", JSON.stringify(cart));
@@ -2061,10 +2088,30 @@ function applyLang() {
   document.getElementById("heroEyebrow").textContent = t.heroEyebrow;
   document.getElementById("heroTitle").textContent = t.heroTitle;
   document.getElementById("heroSub").textContent = t.heroSub;
-  document.getElementById("heroBadge1").textContent = t.heroBadge1;
-  document.getElementById("heroBadge2").textContent = t.heroBadge2;
+  document.getElementById("heroBadge1").textContent = isIntlMode ? "🌍 Worldwide Shipping Available" : t.heroBadge1;
+  document.getElementById("heroBadge2").textContent = isIntlMode ? "Custom Export & Bulk Quotes" : t.heroBadge2;
+  const hb3 = document.getElementById("heroBadge3");
+  if (hb3) hb3.style.display = isIntlMode ? "none" : "";
   const ann = document.getElementById("announceBar");
-  if (ann && t.announce) ann.innerHTML = t.announce;
+  if (ann) {
+    ann.innerHTML = isIntlMode
+      ? "🌍 <strong>International Catalog</strong> &nbsp;•&nbsp; Worldwide Shipping Available &nbsp;•&nbsp; Select items to Request a Custom Quote"
+      : (t.announce || "");
+  }
+  const sortEl = document.getElementById("sortSelect");
+  if (sortEl) sortEl.style.display = isIntlMode ? "none" : "";
+  const cartBarBtn = document.getElementById("cartBarBtn");
+  if (cartBarBtn) cartBarBtn.textContent = isIntlMode ? "Review Quote →" : "Review Order →";
+  if (isIntlMode) {
+    document.getElementById("checkoutTitle").textContent = "Request a Quote";
+    document.getElementById("orderTotalLbl").textContent = "Pricing";
+    document.getElementById("custPhoneLbl").textContent = "WhatsApp / Email *";
+    document.getElementById("custPhone").placeholder = "+1 / +44 / +61... or email";
+    document.getElementById("custAddrLbl").textContent = "Country & Shipping Address *";
+    document.getElementById("custAddress").placeholder = "City, State/Province, Country";
+    document.getElementById("btnWaSubmit").textContent = "Request Quote on WhatsApp";
+    document.getElementById("btnCopySubmit").textContent = "Request Quote & Copy";
+  }
   const wa = document.getElementById("waFloat");
   if (wa) wa.textContent = t.waFloat;
 }
@@ -2184,7 +2231,7 @@ function renderNewArrivals() {
   }
   strip.style.display = "block";
   row.innerHTML = newItems.map(p => {
-    const priceText = p.price > 0 ? `NPR ${p.price.toLocaleString()}` : "Inquiry";
+    const priceText = formatPrice(p.price);
     return `
       <div class="new-mini" onclick="openQuickView('${p.code}')">
         <div class="new-mini-img">
@@ -2210,7 +2257,7 @@ function renderGrid() {
     const curIdx = activeCardImg[p.code] || 0;
     const qty = cart[p.code] || 0;
     const isWished = wishlist.has(p.code);
-    const priceText = p.price > 0 ? `NPR ${p.price.toLocaleString()}` : t.inquiry;
+    const priceText = formatPrice(p.price);
     const newTag = p.is_new ? `<span class="new-badge">NEW</span>` : "";
     const thumbsHtml = p.images.length > 1 ? `
       <div class="thumbs" id="thumbs-${p.code}">
@@ -2225,7 +2272,7 @@ function renderGrid() {
         <span>${qty} ${t.pcs}</span>
         <button onclick="updateQty('${p.code}', 1)">+</button>
       </div>` : `
-      <button class="add-btn" onclick="updateQty('${p.code}', 1)">${t.addBtn}</button>`;
+      <button class="add-btn" onclick="updateQty('${p.code}', 1)">${getAddBtnLabel()}</button>`;
 
     return `
       <div class="card">
@@ -2287,8 +2334,9 @@ function renderCartBar() {
     totalPcs += qty;
     if (p && p.price > 0) totalNpr += p.price * qty;
   });
-  document.getElementById("cartSummary").innerHTML =
-    `<strong>${entries.length} product${entries.length > 1 ? 's' : ''} (${totalPcs} pcs)</strong> • Est. NPR ${totalNpr.toLocaleString()}`;
+  document.getElementById("cartSummary").innerHTML = isIntlMode
+    ? `<strong>${entries.length} product${entries.length > 1 ? 's' : ''} (${totalPcs} pcs)</strong> • Request Quote`
+    : `<strong>${entries.length} product${entries.length > 1 ? 's' : ''} (${totalPcs} pcs)</strong> • Est. NPR ${totalNpr.toLocaleString()}`;
   bar.classList.add("show");
   if (waFloat) waFloat.classList.add("lifted");
   if (backTop) backTop.classList.add("lifted");
@@ -2349,7 +2397,7 @@ function openQuickView(code) {
   document.getElementById("qvCat").textContent = qvProduct.group;
   document.getElementById("qvTitle").textContent = qvProduct.name;
   document.getElementById("qvNepali").textContent = qvProduct.nepali_name || "";
-  document.getElementById("qvPrice").textContent = qvProduct.price > 0 ? `NPR ${qvProduct.price.toLocaleString()}` : "Price on Inquiry";
+  document.getElementById("qvPrice").textContent = formatPrice(qvProduct.price);
   document.getElementById("qvCode").textContent = `Product Code: ${qvProduct.code}`;
   document.getElementById("qvDesc").textContent = qvProduct.daraz_name || "";
   updateQuickViewMedia();
@@ -2382,10 +2430,10 @@ function renderQuickViewAction() {
   area.innerHTML = qty > 0 ? `
     <div class="qty-box">
       <button onclick="updateQty('${qvProduct.code}', -1)">−</button>
-      <span>${qty} pcs in order</span>
+      <span>${qty} pcs selected</span>
       <button onclick="updateQty('${qvProduct.code}', 1)">+</button>
     </div>` : `
-    <button class="add-btn" onclick="updateQty('${qvProduct.code}', 1)">+ Add to Order</button>`;
+    <button class="add-btn" onclick="updateQty('${qvProduct.code}', 1)">${getAddBtnLabel()}</button>`;
 }
 function openLightboxFromQuickView() {
   if (!qvProduct) return;
@@ -2441,7 +2489,7 @@ function updateLightbox() {
   lbImg.dataset.triedFb = "";
   lbImg.onerror = function() { handleImgError(this); };
   lbImg.src = lbProduct.images[lbIndex];
-  const priceText = lbProduct.price > 0 ? `NPR ${lbProduct.price.toLocaleString()}` : "Price on Inquiry";
+  const priceText = formatPrice(lbProduct.price);
   const npPart = lbProduct.nepali_name ? ` / ${lbProduct.nepali_name}` : "";
   const descPart = lbProduct.daraz_name ? ` — ${lbProduct.daraz_name}` : "";
   document.getElementById("lbCaption").textContent = `${lbProduct.name}${npPart} (${lbProduct.code}) • ${priceText} [${lbIndex + 1}/${lbProduct.images.length}]${descPart}`;
@@ -2479,7 +2527,7 @@ function renderCheckoutItems() {
     const p = PRODUCTS.find(x => x.code === code);
     const sub = p.price > 0 ? p.price * qty : 0;
     total += sub;
-    const subTxt = p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Inquiry";
+    const subTxt = isIntlMode ? "Request Quote" : (p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Inquiry");
     return `
       <div class="order-item">
         <div class="oi-left">
@@ -2493,7 +2541,7 @@ function renderCheckoutItems() {
         </div>
       </div>`;
   }).join("");
-  document.getElementById("orderTotal").textContent = `NPR ${total.toLocaleString()}`;
+  document.getElementById("orderTotal").textContent = isIntlMode ? "Quote Upon Request" : `NPR ${total.toLocaleString()}`;
 }
 
 function buildOrderMessage() {
@@ -2513,15 +2561,15 @@ function buildOrderMessage() {
   }
 
   let total = 0;
-  const lines = ["*New Order — New Sujan Store*", ""];
+  const lines = [isIntlMode ? "*International Quote Request — New Sujan Store*" : "*New Order — New Sujan Store*", ""];
   entries.forEach(([code, qty], idx) => {
     const p = PRODUCTS.find(x => x.code === code);
     const sub = p.price > 0 ? p.price * qty : 0;
     total += sub;
-    const pricePart = p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Price on Inquiry";
+    const pricePart = isIntlMode ? "Request Quote" : (p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Price on Inquiry");
     lines.push(`${idx + 1}. ${p.name} [${code}] × ${qty} pcs — ${pricePart}`);
   });
-  lines.push("", `*Estimated Total:* NPR ${total.toLocaleString()}`);
+  lines.push("", isIntlMode ? "*Pricing:* Custom Quote Requested" : `*Estimated Total:* NPR ${total.toLocaleString()}`);
   lines.push("", "*Customer Details:*");
   lines.push(`Name: ${name}`);
   lines.push(`Phone: ${phone}`);
@@ -2556,7 +2604,7 @@ function sendOrderEmail(msg) {
 
   let total = 0;
   const payload = {
-    _subject: `New Order — New Sujan Store (${name})`,
+    _subject: isIntlMode ? `New International Quote Request — New Sujan Store (${name})` : `New Order — New Sujan Store (${name})`,
     _cc: ORDER_CC_EMAILS,
     _template: "table",
     _captcha: "false",
@@ -2570,7 +2618,7 @@ function sendOrderEmail(msg) {
     const p = PRODUCTS.find(x => x.code === code);
     const sub = p.price > 0 ? p.price * qty : 0;
     total += sub;
-    const pricePart = p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Price on Inquiry";
+    const pricePart = isIntlMode ? "Request Quote" : (p.price > 0 ? `NPR ${sub.toLocaleString()}` : "Price on Inquiry");
     const imgPath = (p.images && p.images[0]) ? p.images[0] : "";
     const imgUrl = imgPath ? (imgPath.startsWith("http") ? imgPath : `${SITE_BASE_URL}${imgPath}`) : "";
     payload[`Item_${idx + 1}`] = `${p.name} [${code}] × ${qty} pcs — ${pricePart}`;
@@ -2579,7 +2627,7 @@ function sendOrderEmail(msg) {
     }
   });
 
-  payload.Estimated_Total = `NPR ${total.toLocaleString()}`;
+  payload.Estimated_Total = isIntlMode ? "Quote Requested (International)" : `NPR ${total.toLocaleString()}`;
   payload.Order_Summary = msg;
 
   return fetch(`https://formsubmit.co/ajax/${encodeURIComponent(ORDER_EMAIL)}`, {
@@ -2688,7 +2736,7 @@ function renderHighlightBanner() {
   const t = I18N[currentLang] || I18N.en;
 
   track.innerHTML = hlItems.map(p => {
-    const priceText = p.price > 0 ? `NPR ${p.price.toLocaleString()}` : t.inquiry;
+    const priceText = formatPrice(p.price);
     return `
       <div class="hl-slide">
         <div class="hl-img-box" onclick="openQuickView('${p.code}')">
@@ -2701,7 +2749,7 @@ function renderHighlightBanner() {
           ${p.daraz_name ? `<p class="hl-desc">${p.daraz_name}</p>` : ""}
           <div class="hl-bottom">
             <span class="hl-price">${priceText}</span>
-            <button class="hl-cta" onclick="updateQty('${p.code}', 1)">${t.addBtn}</button>
+            <button class="hl-cta" onclick="updateQty('${p.code}', 1)">${getAddBtnLabel()}</button>
             <button class="hl-cta-sec" onclick="openQuickView('${p.code}')">Quick View</button>
           </div>
         </div>
