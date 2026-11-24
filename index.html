@@ -1654,8 +1654,8 @@
       <p>Carefully curated traditional Jari Malas, Makhmal bags, bridal Ghumto, and ceremonial essentials.</p>
     </div>
     <div class="trust-card">
-      <h4>Free Kathmandu Delivery</h4>
-      <p>Complimentary delivery inside Kathmandu Valley, with fast nationwide shipping across Nepal.</p>
+      <h4 id="trustDelTitle">Free Kathmandu Delivery</h4>
+      <p id="trustDelDesc">Complimentary delivery inside Kathmandu Valley, with fast nationwide shipping across Nepal.</p>
     </div>
     <div class="trust-card">
       <h4>Bulk &amp; Wedding Orders</h4>
@@ -1673,11 +1673,11 @@
     </details>
     <details>
       <summary>How long does delivery take?</summary>
-      <p>Inside Kathmandu Valley, orders are typically delivered within 24–48 hours (free delivery). Outside-valley courier delivery takes 2–4 working days.</p>
+      <p id="faqDelAns">Inside Kathmandu Valley, orders are typically delivered within 24–48 hours (free delivery). Outside-valley courier delivery takes 2–4 working days.</p>
     </details>
     <details>
       <summary>What payment methods are accepted?</summary>
-      <p>We accept Cash on Delivery (COD) inside Kathmandu Valley as well as eSewa, Khalti, Fonepay, and bank transfers.</p>
+      <p id="faqPayAns">We accept Cash on Delivery (COD) inside Kathmandu Valley as well as eSewa, Khalti, Fonepay, and bank transfers.</p>
     </details>
   </div>
 </section>
@@ -1692,7 +1692,7 @@
         and embroidered Makhmal bags to traditional Dhago, bangles, and cosmetics — every piece is
         curated for weddings, Bratabandha, Pasni, and special cultural celebrations.
       </p>
-      <div class="info-tags">
+      <div class="info-tags" id="aboutTags">
         <span class="info-tag">Cash on Delivery Available</span>
         <span class="info-tag">Free Delivery in Kathmandu Valley</span>
         <span class="info-tag">Nationwide Shipping</span>
@@ -1731,7 +1731,7 @@
           <div><span class="lbl">Email</span>Sujan.store.np@gmail.com</div>
         </a>
         <div class="contact-item">
-          <div><span class="lbl">Service Area</span>Kathmandu Valley (Free Delivery) &amp; All Nepal</div>
+          <div><span class="lbl">Service Area</span><span id="serviceAreaText">Kathmandu Valley (Free Delivery) &amp; All Nepal</span></div>
         </div>
       </div>
     </div>
@@ -1742,7 +1742,7 @@
   <div class="footer-inner">
     <img class="footer-logo" src="logo.png" alt="New Sujan Store" onerror="this.style.display='none'" />
     <h3 class="footer-brand">New Sujan Store</h3>
-    <p class="footer-sub">Cash on Delivery Available &nbsp;•&nbsp; Free Delivery Inside Kathmandu Valley &nbsp;•&nbsp; Nationwide Shipping</p>
+    <p class="footer-sub" id="footerSub">Cash on Delivery Available &nbsp;•&nbsp; Free Delivery Inside Kathmandu Valley &nbsp;•&nbsp; Nationwide Shipping</p>
     <div class="footer-copy">© New Sujan Store, Kathmandu, Nepal • WhatsApp: +977 9851237839</div>
   </div>
 </footer>
@@ -2131,6 +2131,27 @@ function applyLang() {
     document.getElementById("custAddress").placeholder = "Street, City, ZIP / Postal Code";
     document.getElementById("btnWaSubmit").textContent = "Request Quote on WhatsApp";
     document.getElementById("btnCopySubmit").textContent = "Request Quote & Copy";
+    const aboutTags = document.getElementById("aboutTags");
+    if (aboutTags) {
+      aboutTags.innerHTML = [
+        "🌍 Worldwide Express Shipping",
+        "Custom Export & Bulk Quotes",
+        "Authentic Handcrafted in Nepal",
+        "Secure International Payment",
+      ].map(txt => `<span class="info-tag">${txt}</span>`).join("");
+    }
+    const sa = document.getElementById("serviceAreaText");
+    if (sa) sa.textContent = "Worldwide Shipping from Kathmandu, Nepal (USA, UK, Australia, Canada, Europe & More)";
+    const tdT = document.getElementById("trustDelTitle");
+    const tdD = document.getElementById("trustDelDesc");
+    if (tdT) tdT.textContent = "Worldwide Shipping";
+    if (tdD) tdD.textContent = "Carefully packed and shipped internationally from Kathmandu, Nepal via reliable express courier.";
+    const fDel = document.getElementById("faqDelAns");
+    const fPay = document.getElementById("faqPayAns");
+    if (fDel) fDel.textContent = "International orders are shipped from Kathmandu, Nepal via express courier (typically 5–10 business days depending on destination).";
+    if (fPay) fPay.textContent = "We send a custom quote including international shipping before payment. International bank transfer, Wise / Remit, and digital payments are accepted.";
+    const fSub = document.getElementById("footerSub");
+    if (fSub) fSub.innerHTML = "🌍 Worldwide Shipping from Nepal &nbsp;•&nbsp; Custom Export &amp; Bulk Quotes &nbsp;•&nbsp; Authentic Nepali Craftsmanship";
   }
   const wa = document.getElementById("waFloat");
   if (wa) wa.textContent = t.waFloat;
